@@ -4,10 +4,10 @@
   "license": "MIT",
   "author": "RagnaCron",
   "type": "module",
-  "main": "./index.js",
+  "main": "./src/index.js",
   "pi": {
     "extensions": [
-      "./index.ts"
+      "./src/index.ts"
     ]
   },
   "devDependencies": {
