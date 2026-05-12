@@ -98,8 +98,10 @@ runtime version before making any version-dependent recommendations.
 
 ### {{LANGUAGE_UPPER}} version gates
 <!-- Add version-specific feature gates below as the language evolves.     -->
-<!-- For Go, the golang-patterns and golang-testing skills carry their own  -->
-<!-- version gate tables. This section is for project-level overrides.     -->
+<!-- Language-specific skills carry their own version gate information.   -->
+<!-- This section is for project-level overrides.                         -->
+
+{{LANGUAGE_PATTERNS_REF}}
 
 ---
 
@@ -107,11 +109,6 @@ runtime version before making any version-dependent recommendations.
 
 The following skills are available in this project. They load on demand.
 
-| Skill               | When it activates                                              |
-|---------------------|----------------------------------------------------------------|
-| feature-planner     | User describes a feature or task to plan                       |
-| project-overview    | User asks about architecture or wants a PROJECT.md             |
-| boring-code         | User explicitly requests code                                  |
 {{LANGUAGE_SKILLS_TABLE}}
 
 Skills are reference material. You draw on them to inform your plans and

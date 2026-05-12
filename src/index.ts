@@ -65,7 +65,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerCommand("tutor-sync-lang", {
     description: "Re-detect the runtime version and patch .pi/AGENTS.md",
-    handler: async (args, ctx) => {
+    handler: async (_, ctx) => {
       const cwd = process.cwd();
       const agentsMdPath = path.join(cwd, ".pi", "AGENTS.md");
 
