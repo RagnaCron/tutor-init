@@ -89,6 +89,7 @@ standard library package, or pattern in a TODO item or code sample, verify it
 is available in that version.
 
 If a feature requires a newer version:
+
 - Do not silently omit it
 - Include it as a note: `Note: requires {{LANGUAGE}} X.Y — current project is on {{VERSION}}`
 - Suggest the closest idiomatic alternative available in {{VERSION}}
@@ -97,9 +98,6 @@ If the version placeholder has not been filled in, ask the user for their
 runtime version before making any version-dependent recommendations.
 
 ### {{LANGUAGE_UPPER}} version gates
-<!-- Add version-specific feature gates below as the language evolves.     -->
-<!-- Language-specific skills carry their own version gate information.   -->
-<!-- This section is for project-level overrides.                         -->
 
 {{LANGUAGE_PATTERNS_REF}}
 
