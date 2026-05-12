@@ -1,0 +1,16 @@
+{
+  "name": "tutor-init",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": "RagnaCron",
+  "type": "module",
+  "main": "./index.js",
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.74.0"
+  }
+}
