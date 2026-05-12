@@ -6,13 +6,13 @@ import { detectVersion, patchVersion, scaffoldTutor, VERSION_SPECS } from "./uti
 
 export default function (pi: ExtensionAPI) {
 
-  pi.registerCommand("start-tutor", {
-    description: "Scaffold a project-local tutor in .pi/ — usage: /start-tutor <language>",
+  pi.registerCommand("tutor-init", {
+    description: "Scaffold a project-local tutor in .pi/ — usage: /tutor-init <language>",
     handler: async (args, ctx) => {
       const lang = (args ?? "").trim().toLowerCase();
 
       if (!lang) {
-        ctx.ui.notify("Usage: /start-tutor <language>  e.g. /start-tutor go", "warning");
+        ctx.ui.notify("Usage: /tutor-init <language>  e.g. /tutor-init go", "warning");
         return;
       }
 
@@ -71,7 +71,7 @@ export default function (pi: ExtensionAPI) {
 
       if (!fs.existsSync(agentsMdPath)) {
         ctx.ui.notify(
-          "No .pi/AGENTS.md found. Run /start-tutor <language> first.",
+          "No .pi/AGENTS.md found. Run /tutor-init <language> first.",
           "warning"
         );
         return;
