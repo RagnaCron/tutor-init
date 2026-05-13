@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { detectVersion, patchVersion, scaffoldTutor, VERSION_SPECS } from "./utils.ts";
+import { addVersionCommand, detectVersion, loadVersionConfig, patchVersion, scaffoldTutor } from "./utils.ts";
 
 
 export default function (pi: ExtensionAPI) {
@@ -34,7 +34,7 @@ export default function (pi: ExtensionAPI) {
 
       // Version detection
       let version: string | null = null;
-      const detected = detectVersion(lang);
+      const detected = detectVersion(cwd, lang);
 
       if (detected) {
         const embed = await ctx.ui.confirm(
@@ -45,11 +45,21 @@ export default function (pi: ExtensionAPI) {
           version = detected;
         }
       } else {
-        ctx.ui.notify(
-          `No version detection available for "${lang}". ` +
-          `A placeholder will be added — fill it in manually in .pi/AGENTS.md.`,
-          "info"
-        );
+        const config = loadVersionConfig(cwd);
+        if (config?.versionCommands?.[lang]) {
+          ctx.ui.notify(
+            `Command configured for "${lang}" but failed to detect a version. ` +
+            `A placeholder will be added — fill it in manually in .pi/AGENTS.md.`,
+            "info"
+          );
+        } else {
+          ctx.ui.notify(
+            `No command configured for "${lang}". ` +
+            `Run /tutor-add-lang ${lang} to add a version detection command, ` +
+            `or fill the placeholder manually in .pi/AGENTS.md.`,
+            "info"
+          );
+        }
       }
       // Scaffold
       const detectedDate = new Date().toISOString().split("T")[0];
@@ -91,23 +101,24 @@ export default function (pi: ExtensionAPI) {
       }
 
       const lang = langMatch[1].toLowerCase();
-      const spec = VERSION_SPECS[lang];
+      const config = loadVersionConfig(cwd);
+      const cmd = config?.versionCommands?.[lang];
 
-      if (!spec) {
+      if (!cmd) {
         ctx.ui.notify(
-          `No version detection available for "${lang}". ` +
-          `Update the version manually in .pi/AGENTS.md.`,
-          "info"
+          `No command configured for "${lang}". ` +
+          `Run /tutor-add-lang ${lang} first.`,
+          "warning"
         );
         return;
       }
 
-      const detected = detectVersion(lang);
+      const detected = detectVersion(cwd, lang);
 
       if (!detected) {
         ctx.ui.notify(
-          `Could not run \`${spec.command}\`. ` +
-          `Update the version manually in .pi/AGENTS.md.`,
+          `Could not run the configured command for "${lang}". ` +
+          `Check the command in .pi/tutor-version.json and update it manually.`,
           "warning"
         );
         return;
@@ -135,6 +146,48 @@ export default function (pi: ExtensionAPI) {
 
       ctx.ui.notify(
         `AGENTS.md updated to ${lang} ${detected}. Run /reload to activate.`,
+        "info"
+      );
+    },
+  });
+
+  pi.registerCommand("tutor-add-lang", {
+    description: "Add a version detection command for a language — usage: /tutor-add-lang <lang>",
+    handler: async (args, ctx) => {
+      const lang = (args ?? "").trim().toLowerCase();
+
+      if (!lang) {
+        ctx.ui.notify("Usage: /tutor-add-lang <language>", "warning");
+        return;
+      }
+
+      const cwd = process.cwd();
+      const config = loadVersionConfig(cwd);
+      const existing = config?.versionCommands?.[lang];
+
+      if (existing) {
+        ctx.ui.notify(
+          `Command already configured for "${lang}": \`${existing}\`. ` +
+          `Update it manually in .pi/tutor-version.json.`,
+          "info"
+        );
+        return;
+      }
+
+      const input = await ctx.ui.input(
+        `Version detection command for "${lang}"`,
+        ""
+      );
+
+      if (!input?.trim()) {
+        ctx.ui.notify("Aborted — command was empty.", "info");
+        return;
+      }
+
+      addVersionCommand(cwd, lang, input.trim());
+      ctx.ui.notify(
+        `Added command for "${lang}" (\`${input.trim()}\`). ` +
+        `Run /tutor-init ${lang} to scaffold.`,
         "info"
       );
     },

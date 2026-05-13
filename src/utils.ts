@@ -3,32 +3,61 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 // ---------------------------------------------------------------------------
-// Version detection
+// Semver extraction — shared by all language version commands
 // ---------------------------------------------------------------------------
 
-interface VersionSpec {
-  command: string;
-  pattern: RegExp;
+const SEMVER = /(\d+\.\d+(?:\.\d+)?)/;
+
+// ---------------------------------------------------------------------------
+// Project-level version config: .pi/tutor-version.json
+// ---------------------------------------------------------------------------
+
+interface VersionConfig {
+  versionCommands: Record<string, string>;
 }
 
-export const VERSION_SPECS: Record<string, VersionSpec> = {
-  go: { command: "go version", pattern: /go(\d+\.\d+(?:\.\d+)?)/ },
-  node: { command: "node --version", pattern: /v(\d+\.\d+\.\d+)/ },
-  nodejs: { command: "node --version", pattern: /v(\d+\.\d+\.\d+)/ },
-  python: { command: "python3 --version", pattern: /Python (\d+\.\d+\.\d+)/ },
-  python3: { command: "python3 --version", pattern: /Python (\d+\.\d+\.\d+)/ },
-  rust: { command: "rustc --version", pattern: /rustc (\d+\.\d+\.\d+)/ },
-  deno: { command: "deno --version", pattern: /(\d+\.\d+\.\d+)/ },
-  bun: { command: "bun --version", pattern: /(\d+\.\d+\.\d+)/ },
-};
+const CONFIG_FILENAME = "tutor-version.json";
 
-export function detectVersion(lang: string): string | null {
-  const spec = VERSION_SPECS[lang.toLowerCase()];
-  if (!spec) return null;
+/** Load project version config. Returns null when the file is missing. */
+export function loadVersionConfig(cwd: string): VersionConfig | null {
+  const configPath = path.join(cwd, ".pi", CONFIG_FILENAME);
+  try {
+    const raw = fs.readFileSync(configPath, "utf8");
+    return JSON.parse(raw) as VersionConfig;
+  } catch {
+    return null;
+  }
+}
+
+/** Save (or overwrite) the project version config. */
+export function saveVersionConfig(cwd: string, config: VersionConfig): void {
+  const configPath = path.join(cwd, ".pi", CONFIG_FILENAME);
+  fs.mkdirSync(path.dirname(configPath), { recursive: true });
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n", "utf8");
+}
+
+/** Add or overwrite a version command for the given language. */
+export function addVersionCommand(cwd: string, lang: string, command: string): void {
+  const config = loadVersionConfig(cwd) ?? { versionCommands: {} };
+  config.versionCommands[lang.toLowerCase()] = command;
+  saveVersionConfig(cwd, config);
+}
+
+/**
+ * Detect the runtime version for a language.
+ * Reads the command from .pi/tutor-version.json, falls back to a version
+ * placeholder when the command is not configured or fails.
+ */
+export function detectVersion(cwd: string, lang: string): string | null {
+  const config = loadVersionConfig(cwd);
+  if (!config) return null;
+
+  const cmd = config.versionCommands[lang.toLowerCase()];
+  if (!cmd) return null;
 
   try {
-    const output = execSync(spec.command, { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
-    const match = output.match(spec.pattern);
+    const output = execSync(cmd, { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+    const match = output.match(SEMVER);
     return match ? match[1] : null;
   } catch {
     return null;
